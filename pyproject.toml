@@ -1,5 +1,5 @@
 [project]
-name = "document-organizer-bot"
+name = "discord-drive-bot"
 version = "0.1.0"
 description = "Discord bot for organizing project documents in Google Drive"
 requires-python = ">=3.11"

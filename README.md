@@ -1,6 +1,6 @@
-# Document-Organizer-Bot
+# Discord Drive Organizer Bot (Starter)
 
-Document-Organizer-Bot is a starter scaffold for a Discord bot that organizes uploaded documents into a designated Google Drive folder and supports retrieval via slash commands.
+A starter scaffold for a Discord bot that organizes uploaded documents into a designated Google Drive folder and allows retrieval using slash commands.
 
 ## Implemented commands
 - `/upload` — validates file, names it with convention, uploads via storage adapter, saves metadata.
