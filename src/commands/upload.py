@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 
 from discord import Attachment, Interaction, app_commands
 
@@ -75,3 +76,23 @@ async def upload_command(
         ),
         ephemeral=True,
     )
+
+    if interaction.channel:
+        saved_dt = datetime.now(timezone.utc)
+        saved_at = saved_dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+        folder_path = f'{created.project}/{created.category}/{saved_dt.strftime("%Y-%m")}'
+        try:
+            await interaction.channel.send(
+                (
+                    '📁 **Document Saved**\n'
+                    f'- **File:** `{created.filename}`\n'
+                    f'- **Doc ID:** `{created.id}` (v{created.version})\n'
+                    f'- **Saved at:** {saved_at}\n'
+                    f'- **Folder:** `{folder_path}`\n'
+                    f'- **Uploaded by:** <@{interaction.user.id}>\n'
+                    f'- **Drive link:** {link}'
+                )
+            )
+        except Exception:
+            # keep upload success even if channel message cannot be posted
+            pass

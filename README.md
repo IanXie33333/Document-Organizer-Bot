@@ -44,7 +44,7 @@ You can use either:
 
 
 ### Discord role/channel example (from your server)
-Use the role's real IDs in `.env` (these are safe to share; they are not secrets):
+Use your real IDs in `.env` (these are safe to share; they are not secrets):
 
 ```env
 DISCORD_ADMIN_ROLE_IDS=1487744861162573865
@@ -54,7 +54,7 @@ DISCORD_VIEWER_ROLE_IDS=
 ALLOWED_CHANNEL_IDS=1479314479488696403
 ```
 
-With this setup, only users with `Doc Admin` or `Doc Uploader` can run commands, and they can only run them in a designated channel.
+With this setup, only users with `Doc Admin` or `Doc Uploader` can run commands, and they can only run them in your documents channel.
 
 ## 2) Local run
 
@@ -82,7 +82,7 @@ PYTHONPATH=src python src/main.py
 
 ## 3) Using in Discord
 
-1. Give designated a role listed in `DISCORD_UPLOADER_ROLE_IDS` (or admin role).
+1. Give yourself a role listed in `DISCORD_UPLOADER_ROLE_IDS` (or admin role).
 2. In allowed channel, run:
    - `/upload file:<attachment> project:<name> category:<name> title:<optional> tags:<optional>`
 3. Retrieve files with:
