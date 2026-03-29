@@ -26,6 +26,20 @@ A Discord bot that stores project files in Google Drive, auto-organizes them int
 3. Enable **Message Content Intent** if needed (slash commands mainly do not require it).
 4. Invite bot to your server with `applications.commands` + `bot` scopes.
 
+
+### Discord role/channel example (from your server)
+Use your real IDs in `.env` (these are safe to share; they are not secrets):
+
+```env
+DISCORD_ADMIN_ROLE_IDS=1487744861162573865
+DISCORD_UPLOADER_ROLE_IDS=1487746052063756419
+# Optional read-only role(s):
+DISCORD_VIEWER_ROLE_IDS=
+ALLOWED_CHANNEL_IDS=1479314479488696403
+```
+
+With this setup, only users with `Doc Admin` or `Doc Uploader` can run commands, and they can only run them in your documents channel.
+
 ## 2) Local run
 
 ```bash

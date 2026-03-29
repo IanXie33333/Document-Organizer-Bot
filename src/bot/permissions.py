@@ -31,5 +31,11 @@ def can_view(interaction: Interaction) -> bool:
     member = _member(interaction)
     if member is None:
         return False
+
     roles = _role_ids(member)
-    return bool(roles.intersection(settings.admin_roles | settings.viewer_roles | settings.uploader_roles))
+    if not roles.intersection(settings.admin_roles | settings.viewer_roles | settings.uploader_roles):
+        return False
+
+    if not settings.channel_allowlist:
+        return True
+    return bool(interaction.channel and interaction.channel.id in settings.channel_allowlist)
