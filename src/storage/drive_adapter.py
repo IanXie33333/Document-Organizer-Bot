@@ -1,8 +1,12 @@
 from io import BytesIO
+from pathlib import Path
 
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 from config.settings import get_settings
 from storage.interface import UploadResult
@@ -13,8 +17,46 @@ class GoogleDriveAdapter:
         settings = get_settings()
         self.settings = settings
         scopes = ['https://www.googleapis.com/auth/drive']
-        creds = service_account.Credentials.from_service_account_file(settings.google_service_account_file, scopes=scopes)
+        creds = self._build_credentials(scopes)
         self.service = build('drive', 'v3', credentials=creds, cache_discovery=False)
+
+    def _build_credentials(self, scopes: list[str]) -> Credentials | service_account.Credentials:
+        if self.settings.google_auth_mode == 'oauth_user':
+            return self._load_oauth_user_credentials(scopes)
+        return self._load_service_account_credentials(scopes)
+
+    def _load_service_account_credentials(self, scopes: list[str]) -> service_account.Credentials:
+        creds_path = Path(self.settings.google_service_account_file).expanduser()
+        if not creds_path.exists():
+            raise FileNotFoundError(
+                f"Google service account credentials file not found: {creds_path}. "
+                'Set GOOGLE_SERVICE_ACCOUNT_FILE in .env to a valid JSON key path.'
+            )
+        return service_account.Credentials.from_service_account_file(str(creds_path), scopes=scopes)
+
+    def _load_oauth_user_credentials(self, scopes: list[str]) -> Credentials:
+        client_secrets_path = Path(self.settings.google_oauth_client_secrets_file).expanduser()
+        if not client_secrets_path.exists():
+            raise FileNotFoundError(
+                f"Google OAuth client secrets file not found: {client_secrets_path}. "
+                'Set GOOGLE_OAUTH_CLIENT_SECRETS_FILE in .env to a valid JSON key path.'
+            )
+
+        token_path = Path(self.settings.google_oauth_token_file).expanduser()
+        creds: Credentials | None = None
+        if token_path.exists():
+            creds = Credentials.from_authorized_user_file(str(token_path), scopes=scopes)
+
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(str(client_secrets_path), scopes)
+                creds = flow.run_local_server(port=0, open_browser=False)
+            token_path.parent.mkdir(parents=True, exist_ok=True)
+            token_path.write_text(creds.to_json(), encoding='utf-8')
+
+        return creds
 
     def _drive_kwargs(self) -> dict:
         kwargs: dict = {'supportsAllDrives': True}

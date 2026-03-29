@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     allowed_channel_ids: str = ''
 
     google_service_account_file: str = './secrets/google-service-account.json'
+    google_auth_mode: str = 'service_account'
+    google_oauth_client_secrets_file: str = './secrets/google-oauth-client.json'
+    google_oauth_token_file: str = './secrets/google-oauth-token.json'
     google_drive_root_folder_id: str = ''
     google_drive_shared_drive_id: str = ''
     google_drive_use_shared_drive: bool = True
@@ -31,6 +34,14 @@ class Settings(BaseSettings):
     @classmethod
     def validate_log_level(cls, value: str) -> str:
         return value.upper()
+
+    @field_validator('google_auth_mode')
+    @classmethod
+    def validate_google_auth_mode(cls, value: str) -> str:
+        normalized = value.lower().strip()
+        if normalized not in {'service_account', 'oauth_user'}:
+            raise ValueError("google_auth_mode must be 'service_account' or 'oauth_user'")
+        return normalized
 
     @property
     def admin_roles(self) -> set[int]:

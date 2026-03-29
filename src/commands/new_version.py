@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import Attachment, Interaction, app_commands
 
 from bot.permissions import can_upload
@@ -18,9 +20,14 @@ async def new_version_command(interaction: Interaction, doc_id: str, file: Attac
         await interaction.followup.send('You do not have permission to upload a new version.', ephemeral=True)
         return
     content = await file.read()
-    document_service, settings = _service()
     try:
-        created, link = document_service.new_version(
+        document_service, settings = _service()
+    except FileNotFoundError as err:
+        await interaction.followup.send(f'New version failed: {err}', ephemeral=True)
+        return
+    try:
+        created, link = await asyncio.to_thread(
+            document_service.new_version,
             doc_id=doc_id,
             original_filename=file.filename,
             content=content,
@@ -30,6 +37,9 @@ async def new_version_command(interaction: Interaction, doc_id: str, file: Attac
         )
     except ValueError as err:
         await interaction.followup.send(str(err), ephemeral=True)
+        return
+    except Exception as err:
+        await interaction.followup.send(f'New version failed: {err}', ephemeral=True)
         return
 
     await interaction.followup.send(f'Uploaded `{created.filename}` as v{created.version}. {link}', ephemeral=True)

@@ -1,3 +1,5 @@
+import asyncio
+
 from discord import Attachment, Interaction, app_commands
 
 from bot.permissions import can_upload
@@ -28,7 +30,11 @@ async def upload_command(
         await interaction.followup.send('You do not have permission to upload.', ephemeral=True)
         return
 
-    document_service, settings = _service()
+    try:
+        document_service, settings = _service()
+    except FileNotFoundError as err:
+        await interaction.followup.send(f'Upload failed: {err}', ephemeral=True)
+        return
 
     ext = file.filename.rsplit('.', maxsplit=1)[-1].lower() if '.' in file.filename else ''
     if ext not in settings.extensions:
@@ -41,18 +47,23 @@ async def upload_command(
     content = await file.read()
     resolved_title = title or file.filename.rsplit('.', maxsplit=1)[0]
 
-    created, link = document_service.upload_document(
-        original_filename=file.filename,
-        content=content,
-        mime_type=file.content_type,
-        project=project,
-        category=category,
-        title=resolved_title,
-        tags_csv=tags,
-        uploader_id=str(interaction.user.id),
-        root_folder_id=settings.google_drive_root_folder_id,
-        is_confidential=confidential,
-    )
+    try:
+        created, link = await asyncio.to_thread(
+            document_service.upload_document,
+            original_filename=file.filename,
+            content=content,
+            mime_type=file.content_type,
+            project=project,
+            category=category,
+            title=resolved_title,
+            tags_csv=tags,
+            uploader_id=str(interaction.user.id),
+            root_folder_id=settings.google_drive_root_folder_id,
+            is_confidential=confidential,
+        )
+    except Exception as err:  # surfaced to user instead of silent command failure
+        await interaction.followup.send(f'Upload failed: {err}', ephemeral=True)
+        return
     await interaction.followup.send(
         (
             'Uploaded successfully.\n'

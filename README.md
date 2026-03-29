@@ -11,14 +11,30 @@ A Discord bot that stores project files in Google Drive, auto-organizes them int
 
 ## 1) Google + Discord setup
 
-### A. Create Google Drive service account
+### A. Choose one Google auth mode
+You can use either:
+- **Service account** (best with Shared Drive access)
+- **OAuth user auth** (recommended when you do not have Shared Drive access)
+
+#### Service account
 1. Create a Google Cloud project.
 2. Enable **Google Drive API**.
 3. Create a service account and download JSON credentials.
 4. Save credentials to:
    - `secrets/google-service-account.json`
-5. Share target Drive root folder with the service account email.
+5. Share your target Drive root folder with the service account email.
 6. Copy that folder ID into `.env` as `GOOGLE_DRIVE_ROOT_FOLDER_ID`.
+
+#### OAuth user auth (no Shared Drive required)
+1. In Google Cloud, create an OAuth consent screen and add yourself as a test user.
+2. Create **OAuth client ID** credentials for a Desktop app.
+3. Save the downloaded JSON to:
+   - `secrets/google-oauth-client.json`
+4. In `.env`, set:
+   - `GOOGLE_AUTH_MODE=oauth_user`
+   - `GOOGLE_OAUTH_CLIENT_SECRETS_FILE=./secrets/google-oauth-client.json`
+   - `GOOGLE_OAUTH_TOKEN_FILE=./secrets/google-oauth-token.json`
+5. On first bot run, complete the local OAuth browser flow; the refresh token will be saved to `GOOGLE_OAUTH_TOKEN_FILE`.
 
 ### B. Create Discord bot app
 1. Open Discord Developer Portal.
@@ -53,7 +69,9 @@ Then edit `.env`:
 - `DISCORD_BOT_TOKEN`
 - `DISCORD_GUILD_ID`
 - role ID lists (`DISCORD_ADMIN_ROLE_IDS`, etc.)
-- `GOOGLE_SERVICE_ACCOUNT_FILE`
+- `GOOGLE_AUTH_MODE` and either:
+  - `GOOGLE_SERVICE_ACCOUNT_FILE` (service account), or
+  - `GOOGLE_OAUTH_CLIENT_SECRETS_FILE` + `GOOGLE_OAUTH_TOKEN_FILE` (OAuth user)
 - `GOOGLE_DRIVE_ROOT_FOLDER_ID`
 
 Run bot:
