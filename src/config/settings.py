@@ -9,15 +9,15 @@ class Settings(BaseSettings):
     app_env: str = 'development'
     log_level: str = 'INFO'
 
-    discord_bot_token: str
-    discord_guild_id: int
+    discord_bot_token: str = ""
+    discord_guild_id: int = 0
     discord_admin_role_ids: str = ''
     discord_uploader_role_ids: str = ''
     discord_viewer_role_ids: str = ''
     allowed_channel_ids: str = ''
 
-    google_service_account_file: str
-    google_drive_root_folder_id: str
+    google_service_account_file: str = './secrets/google-service-account.json'
+    google_drive_root_folder_id: str = ''
     google_drive_shared_drive_id: str = ''
     google_drive_use_shared_drive: bool = True
 
@@ -57,6 +57,12 @@ def parse_csv_ints(raw: str) -> set[int]:
     if not raw:
         return set()
     return {int(token.strip()) for token in raw.split(',') if token.strip()}
+
+
+def parse_csv_str(raw: str | None) -> list[str]:
+    if not raw:
+        return []
+    return [token.strip() for token in raw.split(',') if token.strip()]
 
 
 @lru_cache(maxsize=1)
