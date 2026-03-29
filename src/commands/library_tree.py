@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from discord import Interaction, app_commands
 
-from bot.permissions import can_view
+from bot.permissions import can_view_by_role
 from db.session import session_scope
 from repositories.document_repo import document_repo
 
@@ -20,7 +20,7 @@ async def library_tree_command(
     limit: int = 50,
 ) -> None:
     await interaction.response.defer(ephemeral=True)
-    if not can_view(interaction):
+    if not can_view_by_role(interaction):
         await interaction.followup.send('You do not have permission to view documents.', ephemeral=True)
         return
 

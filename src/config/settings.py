@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     discord_uploader_role_ids: str = ''
     discord_viewer_role_ids: str = ''
     allowed_channel_ids: str = ''
+    discord_clear_global_commands_on_startup: bool = True
 
     google_service_account_file: str = './secrets/google-service-account.json'
     google_auth_mode: str = 'service_account'
