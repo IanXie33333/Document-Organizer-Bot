@@ -5,6 +5,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -110,6 +111,16 @@ class GoogleDriveAdapter:
             fields='id,parents',
             supportsAllDrives=True,
         ).execute()
+
+    def file_exists(self, file_id: str) -> bool:
+        try:
+            file = self.service.files().get(fileId=file_id, fields='id,trashed', supportsAllDrives=True).execute()
+        except HttpError as err:
+            status = getattr(getattr(err, 'resp', None), 'status', None)
+            if status in {403, 404}:
+                return False
+            raise
+        return not bool(file.get('trashed', False))
 
     def get_web_link(self, file_id: str) -> str:
         return f'https://drive.google.com/file/d/{file_id}/view'

@@ -31,6 +31,19 @@ class DocumentRepository:
         for rec in session.scalars(stmt):
             rec.is_latest = False
 
+    def delete_by_ids(self, session: Session, doc_ids: list[str]) -> int:
+        if not doc_ids:
+            return 0
+        stmt = select(DocumentRecord).where(DocumentRecord.id.in_(doc_ids))
+        records = list(session.scalars(stmt))
+        for rec in records:
+            session.delete(rec)
+        return len(records)
+
+    def list_recent(self, session: Session, *, limit: int = 200) -> Sequence[DocumentRecord]:
+        stmt = select(DocumentRecord).order_by(desc(DocumentRecord.created_at)).limit(limit)
+        return list(session.scalars(stmt))
+
     def search(
         self,
         session: Session,

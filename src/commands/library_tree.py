@@ -5,6 +5,7 @@ from discord import Interaction, app_commands
 from bot.permissions import can_view_by_role
 from db.session import session_scope
 from repositories.document_repo import document_repo
+from storage.drive_adapter import GoogleDriveAdapter
 
 
 @app_commands.command(name='library_tree', description='Show library folder structure and recent file names')
@@ -32,12 +33,42 @@ async def library_tree_command(
         await interaction.followup.send('No documents found for that scope.', ephemeral=True)
         return
 
+    verification_note = ''
+    stale_ids: list[str] = []
+    try:
+        storage = GoogleDriveAdapter()
+        verified_docs = []
+        for doc in docs:
+            if storage.file_exists(doc.drive_file_id):
+                verified_docs.append(doc)
+            else:
+                stale_ids.append(doc.id)
+        docs = verified_docs
+    except Exception:
+        verification_note = '⚠️ Could not verify Drive deletions right now; showing stored index results.\n'
+
+    if stale_ids:
+        with session_scope() as session:
+            removed = document_repo.delete_by_ids(session, stale_ids)
+        if removed:
+            verification_note += f'ℹ️ Removed {removed} stale record(s) for deleted Drive files.\n'
+
+    if not docs:
+        message = 'No documents found for that scope.'
+        if verification_note:
+            message = verification_note + message
+        await interaction.followup.send(message, ephemeral=True)
+        return
+
     tree: dict[str, dict[str, dict[str, list[str]]]] = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for doc in docs:
         month = doc.created_at.strftime('%Y-%m')
         tree[doc.project][doc.category][month].append(f'{doc.filename} (v{doc.version})')
 
-    lines = ['Library structure (Project / Category / Month):']
+    lines = []
+    if verification_note:
+        lines.append(verification_note.rstrip())
+    lines.append('Library structure (Project / Category / Month):')
     for project_name in sorted(tree.keys()):
         lines.append(f'📁 {project_name}')
         for category_name in sorted(tree[project_name].keys()):

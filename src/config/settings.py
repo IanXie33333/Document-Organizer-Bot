@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     discord_viewer_role_ids: str = ''
     allowed_channel_ids: str = ''
     discord_clear_global_commands_on_startup: bool = True
+    drive_deletion_monitor_enabled: bool = True
+    drive_deletion_poll_seconds: int = 120
+    drive_deletion_scan_limit: int = 200
 
     google_service_account_file: str = './secrets/google-service-account.json'
     google_auth_mode: str = 'service_account'
